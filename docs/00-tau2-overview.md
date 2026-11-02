@@ -125,8 +125,13 @@ upstream 수정이 필요 없다. (단 `tau2 run` CLI는 별도 프로세스라 
   (USD/1M: luna 0.10/0.50, cached 0.01 등). 그래야 tau2 비용 집계가 맞게 나온다. 검증한 값: luna 입력 1만, 출력 1만 토큰 → $0.001 + $0.005.
   - 한 요청이 입력 272K 토큰을 넘으면 litellm이 OpenAI 장문 할증(입력 2배, 출력 1.5배)을 자동 적용한다. 이 프로젝트 대화 길이에서는 해당 없음.
   - 응답의 model 필드가 날짜 붙은 이름(예: `gpt-6-luna-2026-..`)으로 오면 단가를 못 찾아 비용 0이 된다. 첫 실제 실행에서 확인한다.
-- 주의 3: 판정자에는 `reasoning_effort: low`가, 사용자에는 `temperature: 0`이 전달된다. 모델이 이 인자를 거부하면
-  `SIM_JUDGE_ARGS`나 `--user-llm-args`로 조정한다.
+- 주의 3: gpt-6 계열은 tau2 기본 호출 인자와 맞지 않는다. 래퍼가 `llm_utils.completion`을 감싸서 자동 보정한다.
+  - `temperature`는 기본값 1만 허용한다. tau2 기본값 0을 넣으면 `BadRequestError`가 나므로 제거한다.
+    → **같은 태스크도 실행마다 결과가 달라질 수 있다.** pass^k 측정 때 trial 수를 넉넉히 잡는다.
+  - chat completions API에서는 툴과 reasoning을 같이 쓸 수 없다("Function tools with reasoning_effort are not supported").
+    그래서 툴이 있는 호출(에이전트)에는 `reasoning_effort="none"`을 넣는다. 에이전트는 reasoning 없이 동작한다.
+  - litellm 1.82.6은 이 모델을 reasoning 모델로 모른다. 그래서 `reasoning_effort`를 거부하므로 `allowed_openai_params`로 허용한다.
+  - 판정자와 사용자 시뮬레이터는 툴이 없어서 reasoning을 쓸 수 있다 (판정자 기본 `low`).
 
 ## 7. 실행과 결과 확인
 
@@ -140,6 +145,25 @@ PYTHONUTF8=1 uv run cs-tau2 run --domain retail --language ko \
 - `--dry-run`을 붙이면 호출 없이 실행 계획만 출력한다 (확인함).
 - 예상 LLM 호출: 태스크당 에이전트 약 10~30회 + 사용자 약 5~15회 + COMMUNICATE 판정 → 5태스크 기준 대략 **80~230회**.
 - 결과: `tau2-bench/data/simulations/baseline-ko-llm_agent-5/results.json`
+
+### 베이스라인 결과 (2026-11-02, 에이전트·시뮬레이터 모두 gpt-6-luna, 에이전트 reasoning none)
+
+| 지표 | 값 |
+|---|---|
+| 태스크 | 5개 (6, 8, 11, 13, 14 `_ko_identity`), trial 1 |
+| Pass^1 | **0.80** (4/5) |
+| DB 일치 | 4/5 |
+| 읽기 액션 일치 | 22/22 |
+| 쓰기 액션 일치 | 5/7 |
+| LLM 호출 | 에이전트 45회 $0.0066, 사용자 21회 $0.0016 (판정자 제외) |
+
+- 실패한 14번은 **에이전트가 아니라 사용자 시뮬레이터 실수**다. 에이전트는 반품 2건을 정확히 제안하고 "네"를 요청했다.
+  그런데 시뮬레이터가 `네, 진행해 주세요.###STOP###`처럼 동의와 종료 토큰을 한 메시지에 함께 보냈다.
+  그래서 대화가 끝나 실행되지 못했다. 값싼 모델을 시뮬레이터로 쓸 때 생기는 노이즈다.
+  가드를 붙여도 이 유형은 막을 수 없으므로 실패 분류에서 "시뮬레이터 오류"로 따로 센다.
+- `tau2 view`의 `Avg Cost/Conversation`이 `n/a`로 나온다. 한국어 팩은 첫 인사("안녕하세요, 무엇을 도와드릴까요?")를
+  고정 메시지로 넣는데, 이 메시지에 cost가 없다. tau2 `get_cost`는 cost 없는 메시지가 하나라도 있으면 합계를 None으로 만든다.
+  위 비용은 메시지별 cost를 직접 합산한 값이다.
 - 보기:
   ```bash
   PYTHONUTF8=1 uv run tau2 view --file tau2-bench/data/simulations/baseline-llm_agent-5/results.json

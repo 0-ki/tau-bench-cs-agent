@@ -42,6 +42,7 @@ def apply_overrides() -> dict:
     from cs_agent.pricing import register_prices
 
     register_prices()
+    _patch_completion_for_gpt6()
 
     old_models = {getattr(cfg, key) for key in _MODEL_KEYS if hasattr(cfg, key)}
     values = {key: sim_model() for key in _MODEL_KEYS}
@@ -78,6 +79,30 @@ def apply_overrides() -> dict:
         for d in InterfaceAgent.__init__.__defaults__ or ()
     )
     return values
+
+
+def _patch_completion_for_gpt6() -> None:
+    """gpt-6 계열 호출 인자 보정. tau2는 llm_utils.completion으로 litellm을 호출한다.
+
+    - temperature: 기본값(1)만 허용. tau2 기본값 0은 제거
+    - reasoning_effort: litellm 1.82.6이 이 모델을 reasoning 모델로 몰라 거부하므로 명시 허용
+    - chat completions에서 툴과 reasoning을 함께 쓸 수 없어, 툴이 있으면 reasoning_effort="none"
+    """
+    import tau2.utils.llm_utils as llm_utils
+
+    original = llm_utils.completion
+
+    def completion(*args, **kwargs):
+        model = kwargs.get("model") or (args[0] if args else "")
+        if "gpt-6" in model:
+            kwargs.pop("temperature", None)
+            if kwargs.get("tools"):
+                kwargs["reasoning_effort"] = "none"
+            if "reasoning_effort" in kwargs:
+                kwargs["allowed_openai_params"] = ["reasoning_effort"]
+        return original(*args, **kwargs)
+
+    llm_utils.completion = completion
 
 
 def main() -> None:

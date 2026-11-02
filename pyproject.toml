@@ -1,0 +1,27 @@
+[project]
+name = "cs-agent"
+version = "0.1.0"
+description = "tau2-bench retail 도메인 기반 CS 에이전트 학습 프로젝트"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "tau2",
+    "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.uv.sources]
+# upstream은 수정하지 않고 editable path 의존성으로만 참조
+tau2 = { path = "tau2-bench", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["cs_agent"]
+
+[project.scripts]
+# tau2 CLI 래퍼: 사용자 시뮬레이터·판정자 모델을 SIM_MODEL로 교체
+cs-tau2 = "cs_agent.tau2_overrides:main"

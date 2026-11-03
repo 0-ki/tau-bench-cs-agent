@@ -1,0 +1,91 @@
+# retail 툴 명세 (Phase 1). 근거: docs/01-policy-analysis.md
+# Phase 3 도메인 판단과 Phase 4 가드가 같은 파일을 읽는다.
+# enforced_by: tool = upstream 툴이 이미 막음, agent = 가드가 막아야 함.
+version: 1
+source_policy: tau2-bench/data/tau2/domains/retail/policy.md
+
+rules:
+  AUTH-01:   {line: 10, kind: hard, enforced_by: agent, text: "이메일 또는 이름+우편번호로 인증. user_id를 받아도 생략 불가"}
+  AUTH-02:   {line: 12, kind: hard, enforced_by: agent, text: "인증 후에만 정보 제공"}
+  SCOPE-01:  {line: 14, kind: hard, enforced_by: agent, text: "한 대화 한 사용자. 대상은 인증된 사용자 소유"}
+  CONFIRM-01: {line: 16, kind: hard, enforced_by: agent, text: "DB 변경 전 상세 나열 후 명시적 yes"}
+  INFO-01:   {line: 18, kind: soft, text: "정보·절차를 지어내지 않음, 주관적 추천 금지"}
+  PROTO-01:  {line: 20, kind: hard, enforced_by: agent, text: "한 턴에 툴 호출 1개 또는 응답 1개"}
+  DENY-01:   {line: 22, kind: soft, text: "정책 위반 요청 거부"}
+  XFER-01:   {line: 24, kind: soft, enforced_by: agent, text: "범위 밖일 때만 이관. 툴 호출 후 고정 문구"}
+  CAP-01:    {line: 3, kind: soft, text: "가능한 업무 범위"}
+  DOM-01:    {line: 28, kind: soft, text: "DB 시각은 EST 24시간제"}
+  DOM-02:    {line: 62, kind: hard, enforced_by: tool, text: "product_id와 item_id 혼동 금지"}
+  ACT-01:    {line: 82, kind: hard, enforced_by: tool, text: "pending 또는 delivered 주문에만 액션"}
+  ACT-02:    {line: 84, kind: hard, enforced_by: [tool, agent], text: "교환·상품 수정은 주문당 1회, 항목을 모아 한 번에"}
+  CAN-01:    {line: 88, kind: hard, enforced_by: tool, text: "status == pending"}
+  CAN-02:    {line: 90, kind: hard, enforced_by: [tool, agent], text: "사유는 no longer needed / ordered by mistake, 사용자 확인"}
+  CAN-03:    {line: 92, kind: soft, text: "환불 시점 설명"}
+  MOD-01:    {line: 96, kind: hard, enforced_by: agent, text: "status == pending (주소·결제 툴은 'pending' 포함 여부로만 검사)"}
+  MOD-02:    {line: 98, kind: hard, enforced_by: tool, text: "주소, 결제수단, 상품 옵션만 수정"}
+  PAY-01:    {line: 102, kind: hard, enforced_by: tool, text: "기존과 다른 단일 결제수단"}
+  PAY-02:    {line: 104, kind: hard, enforced_by: tool, text: "기프트카드 잔액 >= 주문 총액"}
+  PAY-03:    {line: 106, kind: soft, text: "환불 시점 설명"}
+  ITEM-01:   {line: 110, kind: hard, enforced_by: [tool, agent], text: "1회 한정, 이후 수정·취소 불가 (주소·결제 툴은 막지 않음)"}
+  ITEM-02:   {line: 110, kind: soft, enforced_by: agent, text: "수정 항목을 다 말했는지 확인 요청"}
+  ITEM-03:   {line: 112, kind: hard, enforced_by: tool, text: "같은 상품, 다른 옵션, 재고 있음"}
+  ITEM-04:   {line: 114, kind: hard, enforced_by: tool, text: "차액용 결제수단, 기프트카드 잔액 >= 차액"}
+  RET-01:    {line: 118, kind: hard, enforced_by: tool, text: "status == delivered"}
+  RET-02:    {line: 120, kind: hard, enforced_by: agent, text: "order_id와 반품 항목 사용자 확인"}
+  RET-03:    {line: 124, kind: hard, enforced_by: tool, text: "환불은 원 결제수단 또는 기존 기프트카드"}
+  RET-04:    {line: 126, kind: soft, text: "return requested, 이메일 안내 설명"}
+  EXC-01:    {line: 130, kind: hard, enforced_by: [tool, agent], text: "status == delivered, 교환 항목을 다 말했는지 확인 요청"}
+  EXC-02:    {line: 132, kind: hard, enforced_by: [tool, agent], text: "같은 상품, 다른 옵션, 재고 있음 (같은 item_id는 툴이 막지 않음)"}
+  EXC-03:    {line: 134, kind: hard, enforced_by: tool, text: "차액용 결제수단, 기프트카드 잔액 >= 차액"}
+  EXC-04:    {line: 136, kind: soft, text: "exchange requested, 새 주문 불필요 설명"}
+  UADDR-01:  {line: 7, kind: hard, enforced_by: agent, text: "인증된 본인의 기본 주소만 변경"}
+
+common_preconditions: [AUTH-01, SCOPE-01, CONFIRM-01]
+
+tools:
+  read: [find_user_id_by_email, find_user_id_by_name_zip, get_user_details, get_order_details,
+         get_product_details, get_item_details, list_all_product_types]
+  generic: [calculate, transfer_to_human_agents]
+  write:
+    cancel_pending_order:
+      entities: [user, order, payment_method]
+      inputs: {order_id: str, reason: {enum: [no longer needed, ordered by mistake]}}
+      requires_status: pending
+      result_status: cancelled
+      rules: [CAN-01, CAN-02, CAN-03]
+    modify_pending_order_address:
+      entities: [user, order]
+      inputs: {order_id: str, address1: str, address2: str, city: str, state: str, country: str, zip: str}
+      requires_status: pending
+      result_status: pending
+      rules: [MOD-01, MOD-02, ITEM-01]
+    modify_pending_order_payment:
+      entities: [user, order, payment_method]
+      inputs: {order_id: str, payment_method_id: str}
+      requires_status: pending
+      result_status: pending
+      rules: [MOD-01, ITEM-01, PAY-01, PAY-02, PAY-03]
+    modify_pending_order_items:
+      entities: [user, order, item, product, payment_method]
+      inputs: {order_id: str, item_ids: "list[str]", new_item_ids: "list[str]", payment_method_id: str}
+      requires_status: pending
+      result_status: pending (item modified)
+      once_per_order: true
+      rules: [MOD-01, ACT-02, ITEM-01, ITEM-02, ITEM-03, ITEM-04, DOM-02]
+    return_delivered_order_items:
+      entities: [user, order, item, payment_method]
+      inputs: {order_id: str, item_ids: "list[str]", payment_method_id: str}
+      requires_status: delivered
+      result_status: return requested
+      rules: [RET-01, RET-02, RET-03, RET-04]
+    exchange_delivered_order_items:
+      entities: [user, order, item, product, payment_method]
+      inputs: {order_id: str, item_ids: "list[str]", new_item_ids: "list[str]", payment_method_id: str}
+      requires_status: delivered
+      result_status: exchange requested
+      once_per_order: true
+      rules: [ACT-02, EXC-01, EXC-02, EXC-03, EXC-04, DOM-02]
+    modify_user_address:
+      entities: [user]
+      inputs: {user_id: str, address1: str, address2: str, city: str, state: str, country: str, zip: str}
+      rules: [UADDR-01]

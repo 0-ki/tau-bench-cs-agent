@@ -5,3 +5,6 @@ __pycache__/
 .pytest_cache/
 results/
 *.db
+
+# 블로그 초안 (로컬 전용)
+docs/blog/

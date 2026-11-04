@@ -21,8 +21,8 @@
 | Phase | 주제 | 핵심 질문 | 산출 문서 | 상태 |
 |---|---|---|---|---|
 | 0 | 환경 구성과 베이스라인 | — | `00-tau2-overview.md` | **완료** (Pass^1 0.80, 5태스크) |
-| 1 | 정책 분석 (코드 없음) | Q1 준비 | `01-policy-analysis.md`, `tool_specs.yaml` | 다음 |
-| 2 | LangChain 베이스라인 | Q5 | `02-langchain-baseline.md` | 대기 |
+| 1 | 정책 분석 (코드 없음) | Q1 준비 | `01-policy-analysis.md`, `tool_specs.yaml` | **완료** (20태스크 Pass^1 0.70, 가설 H1~H9) |
+| 2 | LangChain 베이스라인 | Q5 | `02-langchain-baseline.md` | 진행 중 |
 | 3 | 도메인 계층 (DDD) | Q1, Q2 | `03-domain-layer.md` | 대기 |
 | 4 | 가드 계층과 에이전트 저장소 | Q2, Q3, Q4 | `04-guard-layer.md` | 대기 |
 | 5 | LangGraph 버전 | Q3, Q5 | `05-langgraph.md` | 대기 |
@@ -54,7 +54,7 @@ Phase 2와 Phase 3은 서로 의존하지 않는다. 순서는 명세대로 2 �
 - 기본 `llm_agent` 베이스라인: retail ko 5태스크, Pass^1 0.80. 실패 1건은 시뮬레이터 오류
 - 상세: [00-tau2-overview.md](00-tau2-overview.md)
 
-## Phase 1. 정책 분석 (코드 작성 없음)
+## Phase 1. 정책 분석 (코드 작성 없음) — 완료
 
 **목표.** 정책을 "코드로 강제할 규칙"과 "프롬프트에 남길 규칙"으로 나눈다. 이 분류표가 Phase 3, 4의 명세가 된다.
 

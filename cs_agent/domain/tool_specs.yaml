@@ -8,9 +8,9 @@ rules:
   AUTH-01:   {line: 10, kind: hard, enforced_by: agent, text: "이메일 또는 이름+우편번호로 인증. user_id를 받아도 생략 불가"}
   AUTH-02:   {line: 12, kind: hard, enforced_by: agent, text: "인증 후에만 정보 제공"}
   SCOPE-01:  {line: 14, kind: hard, enforced_by: agent, text: "한 대화 한 사용자. 대상은 인증된 사용자 소유"}
-  CONFIRM-01: {line: 16, kind: hard, enforced_by: agent, text: "DB 변경 전 상세 나열 후 명시적 yes"}
+  CONFIRM-01: {line: 16, kind: hard, enforced_by: agent, text: "DB 변경 전 짧게 나열 후 명시적 yes. 1회 한정 액션은 소진 안내 추가 (ITEM-02 흡수)"}
   INFO-01:   {line: 18, kind: soft, text: "정보·절차를 지어내지 않음, 주관적 추천 금지"}
-  PROTO-01:  {line: 20, kind: hard, enforced_by: agent, text: "한 턴에 툴 호출 1개 또는 응답 1개"}
+  PROTO-01:  {line: 20, kind: hard, enforced_by: agent, text: "텍스트 또는 툴 호출만. 독립 읽기 병렬 허용, 쓰기는 단독 1개"}
   DENY-01:   {line: 22, kind: soft, text: "정책 위반 요청 거부"}
   XFER-01:   {line: 24, kind: soft, enforced_by: agent, text: "범위 밖일 때만 이관. 툴 호출 후 고정 문구"}
   CAP-01:    {line: 3, kind: soft, text: "가능한 업무 범위"}
@@ -27,7 +27,6 @@ rules:
   PAY-02:    {line: 104, kind: hard, enforced_by: tool, text: "기프트카드 잔액 >= 주문 총액"}
   PAY-03:    {line: 106, kind: soft, text: "환불 시점 설명"}
   ITEM-01:   {line: 110, kind: hard, enforced_by: [tool, agent], text: "1회 한정, 이후 수정·취소 불가 (주소·결제 툴은 막지 않음)"}
-  ITEM-02:   {line: 110, kind: soft, enforced_by: agent, text: "수정 항목을 다 말했는지 확인 요청"}
   ITEM-03:   {line: 112, kind: hard, enforced_by: tool, text: "같은 상품, 다른 옵션, 재고 있음"}
   ITEM-04:   {line: 114, kind: hard, enforced_by: tool, text: "차액용 결제수단, 기프트카드 잔액 >= 차액"}
   RET-01:    {line: 118, kind: hard, enforced_by: tool, text: "status == delivered"}
@@ -71,7 +70,7 @@ tools:
       requires_status: pending
       result_status: pending (item modified)
       once_per_order: true
-      rules: [MOD-01, ACT-02, ITEM-01, ITEM-02, ITEM-03, ITEM-04, DOM-02]
+      rules: [MOD-01, ACT-02, ITEM-01, ITEM-03, ITEM-04, DOM-02]
     return_delivered_order_items:
       entities: [user, order, item, payment_method]
       inputs: {order_id: str, item_ids: "list[str]", payment_method_id: str}

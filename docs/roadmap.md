@@ -22,8 +22,8 @@
 |---|---|---|---|---|
 | 0 | 환경 구성과 베이스라인 | — | `00-tau2-overview.md` | **완료** (Pass^1 0.80, 5태스크) |
 | 1 | 정책 분석 (코드 없음) | Q1 준비 | `01-policy-analysis.md`, `tool_specs.yaml` | **완료** (20태스크 Pass^1 0.70, 가설 H1~H9) |
-| 2 | LangChain 베이스라인 | Q5 | `02-langchain-baseline.md` | 진행 중 |
-| 3 | 도메인 계층 (DDD) | Q1, Q2 | `03-domain-layer.md` | 대기 |
+| 2 | LangChain 베이스라인 | Q5 | `02-langchain-baseline.md` | **완료** (20태스크 Pass^1 0.45, 1 trial) |
+| 3 | 도메인 계층 (DDD) | Q1, Q2 | `03-domain-layer.md` | 다음 |
 | 4 | 가드 계층과 에이전트 저장소 | Q2, Q3, Q4 | `04-guard-layer.md` | 대기 |
 | 5 | LangGraph 버전 | Q3, Q5 | `05-langgraph.md` | 대기 |
 | 6 | Deep Agents 실험 | Q5 | `06-deepagents.md` | 대기 |
@@ -72,7 +72,7 @@ Phase 2와 Phase 3은 서로 의존하지 않는다. 순서는 명세대로 2 �
 
 **완료 기준.** 분류표를 사용자가 검토하고 확정한다.
 
-## Phase 2. LangChain 베이스라인 에이전트
+## Phase 2. LangChain 베이스라인 에이전트 — 완료
 
 **목표.** 프레임워크 비교의 기준점을 만든다. 가드 없이, 정책 전체를 프롬프트로 주고 tau2 툴을 그대로 쓴다.
 

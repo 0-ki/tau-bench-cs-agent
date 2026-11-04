@@ -1,0 +1,17 @@
+{
+  "_comment": "gpt-6-luna 응답 형태를 본뜬 녹화 응답. 순서대로 한 턴에 하나씩 반환된다",
+  "responses": [
+    {"content": "", "tool_calls": [{"id": "call_1", "name": "find_user_id_by_email", "args": {"email": "a@example.com"}}],
+     "usage_metadata": {"input_tokens": 1200, "output_tokens": 20, "total_tokens": 1220}},
+    {"content": "확인했습니다. 두 주문을 조회할게요.", "tool_calls": [
+       {"id": "call_2", "name": "get_order_details", "args": {"order_id": "#W1"}},
+       {"id": "call_3", "name": "get_order_details", "args": {"order_id": "#W2"}}],
+     "usage_metadata": {"input_tokens": 1300, "output_tokens": 30, "total_tokens": 1330}},
+    {"content": "", "tool_calls": [
+       {"id": "call_4", "name": "get_order_details", "args": {"order_id": "#W1"}},
+       {"id": "call_5", "name": "cancel_pending_order", "args": {"order_id": "#W1", "reason": "no longer needed"}}],
+     "usage_metadata": {"input_tokens": 1400, "output_tokens": 30, "total_tokens": 1430}},
+    {"content": "주문 #W1을 '더 이상 필요 없음' 사유로 취소할까요? \"네\"라고 답해 주세요.", "tool_calls": [],
+     "usage_metadata": {"input_tokens": 1500, "output_tokens": 40, "total_tokens": 1540}}
+  ]
+}

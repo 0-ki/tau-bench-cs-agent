@@ -111,6 +111,9 @@ def main() -> None:
 
     load_dotenv()
     apply_overrides()
+    from cs_agent.registry import register_agents
+
+    register_agents()
     from tau2.cli import main as tau2_main
 
     tau2_main()

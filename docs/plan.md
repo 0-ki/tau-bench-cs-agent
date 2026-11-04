@@ -13,6 +13,9 @@ Phase별 상세 계획은 [roadmap.md](roadmap.md). 이 문서는 결정과 명�
 | 2026-11-04 | CONFIRM-01에 ITEM-02 통합. 1회 한정 액션만 소진 안내 추가 | 확인 메시지 하나로 충분. 01-policy-analysis 5절 |
 | 2026-11-04 | 툴 틈 2개(item modified 후 주소·결제 변경, 같은 item 교환) 가드에서 차단 | 실서비스 기준 정책 위반 |
 | 2026-11-04 | PROTO-01 완화: 독립 읽기만 병렬, 쓰기는 단독 1개, 텍스트·툴 혼합 금지 | tau2가 병렬 호출 지원(`MultiToolMessage`). 지연·토큰 절감, 쓰기는 확인·부분 실패 때문에 단독 |
+| 2026-11-04 | Phase 2: `scripts/run_eval.py` 대신 `cs-tau2 run --agent langchain_agent` | registry 등록만 하면 기존 CLI가 같은 보정·같은 조건으로 실행. 스크립트를 따로 두면 조건이 갈라질 위험 |
+| 2026-11-04 | Phase 2: LangChain은 chat model + bind_tools만, `create_agent` 미사용 | tau2 오케스트레이터가 툴을 실행하므로 에이전트 루프와 충돌 |
+| 2026-11-04 | Phase 2 다중 trial 비교(3 trial) 생략 | 목표는 tau2 → LangChain 전환 확인. 1 trial 차이(0.70 vs 0.45)는 분산으로 판단, 프레임워크 비교는 Phase 7에서 trial 늘려 수행 |
 
 ## 외부 제안에서 흡수한 것
 
